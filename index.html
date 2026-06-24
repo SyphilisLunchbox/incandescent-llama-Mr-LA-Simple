@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mr LA Simple — Temp Numbers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0b0b0b;
+      --card-bg: #111117;
+      --card-border: #1e1e2a;
+      --accent-red: #FF0040;
+      --accent-green: #00FF66;
+      --accent-amber: #FFD700;
+      --text-primary: #e8e8f0;
+      --text-muted: #6b6b80;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Inter', sans-serif;
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Subtle grid overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,0,64,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,0,64,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 48px 20px 24px;
+    }
+
+    .logo-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent-red);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 20px rgba(255,0,64,0.5);
+    }
+
+    h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    h1 span {
+      color: var(--accent-red);
+      text-shadow: 0 0 20px rgba(255,0,64,0.6);
+    }
+
+    .tagline {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 8px;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 20px 48px;
+      gap: 24px;
+      max-width: 760px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ── Numbers panel ── */
+    .numbers-panel {
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .panel-header h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .numbers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 10px;
+    }
+
+    .number-btn {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-align: left;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      font-weight: 500;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .number-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0,255,102,0.07), transparent);
+      opacity: 0;
+      transition: opacity 0.18s;
+    }
+
+    .number-btn:hover::before { opacity: 1; }
+
+    .number-btn:hover {
+      border-color: rgba(0,255,102,0.4);
+      box-shadow: 0 0 16px rgba(0,255,102,0.12);
+    }
+
+    .number-btn.selected {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 20px rgba(0,255,102,0.25);
+      background: rgba(0,255,102,0.06);
+    }
+
+    .number-btn.selected::before { opacity: 1; }
+
+    .number-btn.reserved {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .number-label {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .number-value {
+      display: block;
+      letter-spacing: 0.5px;
+    }
+
+    .number-badge {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-family: var(--font-sans);
+      padding: 2px 7px;
+      border-radius: 20px;
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    .badge-free {
+      background: rgba(0,255,102,0.12);
+      color: var(--accent-green);
+      border: 1px solid rgba(0,255,102,0.3);
+    }
+
+    .badge-busy {
+      background: rgba(255,215,0,0.1);
+      color: var(--accent-amber);
+      border: 1px solid rgba(255,215,0,0.3);
+    }
+
+    /* ── Action card ── */
+    .action-card {
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 28px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .selected-number-display {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: rgba(0,255,102,0.05);
+      border: 1px solid rgba(0,255,102,0.2);
+      border-radius: 10px;
+      margin-bottom: 22px;
+      transition: all 0.2s;
+    }
+
+    .selected-number-display.empty {
+      background: rgba(255,255,255,0.02);
+      border-color: var(--card-border);
+    }
+
+    .selected-icon {
+      font-size: 1.3rem;
+    }
+
+    .selected-info {
+      flex: 1;
+    }
+
+    .selected-info .label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .selected-info .value {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--accent-green);
+      margin-top: 2px;
+    }
+
+    .selected-info .value.placeholder {
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      font-weight: 400;
+    }
+
+    .timer-badge {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--accent-amber);
+      background: rgba(255,215,0,0.08);
+      border: 1px solid rgba(255,215,0,0.25);
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: none;
+    }
+
+    .timer-badge.visible { display: block; }
+
+    .field-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    input[type="tel"] {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+    }
+
+    input[type="tel"]::placeholder { color: var(--text-muted); }
+
+    input[type="tel"]:focus {
+      border-color: var(--accent-amber);
+      box-shadow: 0 0 0 3px rgba(255,215,0,0.1), 0 0 16px rgba(255,215,0,0.08);
+    }
+
+    .btn-send {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent-red);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 24px rgba(255,0,64,0.4);
+      text-transform: uppercase;
+    }
+
+    .btn-send::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+      pointer-events: none;
+    }
+
+    .btn-send:hover:not(:disabled) {
+      background: #ff1a55;
+      box-shadow: 0 0 36px rgba(255,0,64,0.6);
+      transform: translateY(-1px);
+    }
+
+    .btn-send:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-send:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .cooldown-bar {
+      width: 100%;
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 2px;
+      margin-top: 12px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .cooldown-bar.visible { display: block; }
+
+    .cooldown-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-red), var(--accent-amber));
+      border-radius: 2px;
+      transition: width 1s linear;
+    }
+
+    /* ── Status area ── */
+    .status-area {
+      margin-top: 20px;
+      min-height: 48px;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.25s ease;
+      opacity: 0;
+      transform: translateY(4px);
+    }
+
+    .status-area.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .status-area.sending {
+      background: rgba(255,215,0,0.08);
+      border: 1px solid rgba(255,215,0,0.25);
+      color: var(--accent-amber);
+    }
+
+    .status-area.success {
+      background: rgba(0,255,102,0.08);
+      border: 1px solid rgba(0,255,102,0.3);
+      color: var(--accent-green);
+      text-shadow: 0 0 12px rgba(0,255,102,0.4);
+    }
+
+    .status-area.error {
+      background: rgba(255,0,64,0.08);
+      border: 1px solid rgba(255,0,64,0.3);
+      color: #ff6688;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,215,0,0.3);
+      border-top-color: var(--accent-amber);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 24px 20px;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+
+    .trust-badges {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .trust-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      font-size: 0.78rem;
+      transition: border-color 0.2s;
+    }
+
+    .trust-badge:hover { border-color: rgba(255,255,255,0.15); }
+
+    @media (max-width: 480px) {
+      .numbers-grid { grid-template-columns: 1fr 1fr; }
+      header { padding: 32px 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-mark">
+      <div class="logo-icon">📡</div>
+      <h1>Mr LA <span>Simple</span></h1>
+    </div>
+    <p class="tagline">Temporary US phone numbers · No sign-up required</p>
+  </header>
+
+  <main>
+
+    <!-- Available numbers -->
+    <div class="numbers-panel">
+      <div class="panel-header">
+        <div class="status-dot"></div>
+        <h2>Available Numbers</h2>
+      </div>
+      <div class="numbers-grid" id="numbersGrid">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- Action card -->
+    <div class="action-card">
+
+      <div class="selected-number-display empty" id="selectedDisplay">
+        <div class="selected-icon">📟</div>
+        <div class="selected-info">
+          <div class="label">Temp number selected</div>
+          <div class="value placeholder" id="selectedValue">← Pick a number above</div>
+        </div>
+        <div class="timer-badge" id="timerBadge">10:00</div>
+      </div>
+
+      <div class="field-group">
+        <label for="phoneInput">Your personal phone number</label>
+        <input
+          type="tel"
+          id="phoneInput"
+          placeholder="+1 555 123 4567"
+          autocomplete="tel"
+          maxlength="20"
+        />
+      </div>
+
+      <button class="btn-send" id="sendBtn" disabled>
+        Get Verification Code
+      </button>
+
+      <div class="cooldown-bar" id="cooldownBar">
+        <div class="cooldown-fill" id="cooldownFill" style="width:100%"></div>
+      </div>
+
+      <div class="status-area" id="statusArea" role="status" aria-live="polite"></div>
+
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="trust-badges">
+      <div class="trust-badge">🔒 No logs</div>
+      <div class="trust-badge">⚡ No BS</div>
+      <div class="trust-badge">🕶️ Private</div>
+    </div>
+  </footer>
+
+  <script>
+    // ── Config ──────────────────────────────────────────────────────────────
+    const API_URL  = 'https://fiscal-dust-odds-public.trycloudflare.com/send';
+    const API_KEY  = '6HgRZxo0f49SsPeWEMMR';
+    const RESERVE_MS   = 10 * 60 * 1000; // 10 min
+    const COOLDOWN_SEC = 12;
+
+    // ── Static phone list ────────────────────────────────────────────────────
+    const NUMBERS = [
+      { number: '+1 (213) 555-0171', label: 'Los Angeles' },
+      { number: '+1 (310) 555-0192', label: 'Santa Monica' },
+      { number: '+1 (323) 555-0148', label: 'Hollywood' },
+      { number: '+1 (818) 555-0134', label: 'Burbank' },
+      { number: '+1 (424) 555-0167', label: 'Culver City' },
+      { number: '+1 (562) 555-0183', label: 'Long Beach' },
+    ];
+
+    // ── State ────────────────────────────────────────────────────────────────
+    let selectedIndex   = null;
+    let reserveExpiry   = {};   // index -> timestamp
+    let reserveTimers   = {};
+    let cooldownTimer   = null;
+    let countdownTimer  = null;
+
+    // ── DOM refs ─────────────────────────────────────────────────────────────
+    const grid          = document.getElementById('numbersGrid');
+    const selectedDisp  = document.getElementById('selectedDisplay');
+    const selectedVal   = document.getElementById('selectedValue');
+    const timerBadge    = document.getElementById('timerBadge');
+    const phoneInput    = document.getElementById('phoneInput');
+    const sendBtn       = document.getElementById('sendBtn');
+    const statusArea    = document.getElementById('statusArea');
+    const cooldownBar   = document.getElementById('cooldownBar');
+    const cooldownFill  = document.getElementById('cooldownFill');
+
+    // ── Render numbers ────────────────────────────────────────────────────────
+    function renderNumbers() {
+      grid.innerHTML = '';
+      NUMBERS.forEach((n, i) => {
+        const busy = reserveExpiry[i] && reserveExpiry[i] > Date.now();
+        const btn = document.createElement('button');
+        btn.className = 'number-btn' +
+          (i === selectedIndex ? ' selected' : '') +
+          (busy && i !== selectedIndex ? ' reserved' : '');
+        btn.innerHTML = `
+          <span class="number-label">${n.label}</span>
+          <span class="number-value">${n.number}</span>
+          <span class="number-badge ${busy && i !== selectedIndex ? 'badge-busy' : 'badge-free'}">
+            ${busy && i !== selectedIndex ? 'In use' : 'Free'}
+          </span>`;
+        btn.addEventListener('click', () => selectNumber(i));
+        grid.appendChild(btn);
+      });
+    }
+
+    function selectNumber(i) {
+      // If already reserved by someone else, ignore (shouldn't happen due to class)
+      selectedIndex = i;
+
+      // Set / extend reservation
+      reserveExpiry[i] = Date.now() + RESERVE_MS;
+      clearInterval(reserveTimers[i]);
+
+      renderNumbers();
+      updateSelectedDisplay();
+      startCountdown(i);
+      updateSendBtn();
+    }
+
+    function updateSelectedDisplay() {
+      if (selectedIndex === null) {
+        selectedDisp.classList.add('empty');
+        selectedVal.textContent = '← Pick a number above';
+        selectedVal.classList.add('placeholder');
+        timerBadge.classList.remove('visible');
+        return;
+      }
+      selectedDisp.classList.remove('empty');
+      selectedVal.textContent = NUMBERS[selectedIndex].number;
+      selectedVal.classList.remove('placeholder');
+      timerBadge.classList.add('visible');
+    }
+
+    function startCountdown(i) {
+      clearInterval(countdownTimer);
+      countdownTimer = setInterval(() => {
+        const ms = reserveExpiry[i] - Date.now();
+        if (ms <= 0) {
+          clearInterval(countdownTimer);
+          timerBadge.textContent = 'Expired';
+          timerBadge.style.color = 'var(--accent-red)';
+          selectedIndex = null;
+          renderNumbers();
+          updateSelectedDisplay();
+          updateSendBtn();
+          return;
+        }
+        const m = String(Math.floor(ms / 60000)).padStart(2, '0');
+        const s = String(Math.floor((ms % 60000) / 1000)).padStart(2, '0');
+        timerBadge.textContent = `${m}:${s}`;
+        timerBadge.style.color = ms < 60000 ? 'var(--accent-red)' : 'var(--accent-amber)';
+      }, 500);
+    }
+
+    function updateSendBtn() {
+      sendBtn.disabled = selectedIndex === null || phoneInput.value.trim().length < 7;
+    }
+
+    phoneInput.addEventListener('input', updateSendBtn);
+
+    // ── Send ──────────────────────────────────────────────────────────────────
+    sendBtn.addEventListener('click', async () => {
+      const phone = phoneInput.value.trim();
+      if (!phone || selectedIndex === null) return;
+
+      setStatus('sending');
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${API_KEY}`,
+          },
+          body: JSON.stringify({
+            phone: phone,
+            message: 'Your verification code is ready. This number is active for 10 minutes.',
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.text().catch(() => res.statusText);
+          throw new Error(err || `Server error ${res.status}`);
+        }
+
+        await res.json().catch(() => ({}));
+        setStatus('success', '✓ Code sent! Check your phone.');
+      } catch (err) {
+        console.error(err);
+        setStatus('error', `⚠ ${err.message || 'Request failed. Try again.'}`);
+      }
+
+      startCooldown();
+    });
+
+    function setStatus(type, msg) {
+      statusArea.className = 'status-area visible ' + type;
+      if (type === 'sending') {
+        statusArea.innerHTML = '<div class="spinner"></div> Sending code…';
+      } else {
+        statusArea.textContent = msg;
+      }
+    }
+
+    function startCooldown() {
+      let remaining = COOLDOWN_SEC;
+      cooldownBar.classList.add('visible');
+      cooldownFill.style.width = '100%';
+
+      // Force reflow so transition fires
+      void cooldownFill.offsetWidth;
+      cooldownFill.style.width = '0%';
+
+      clearInterval(cooldownTimer);
+      cooldownTimer = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+          clearInterval(cooldownTimer);
+          cooldownBar.classList.remove('visible');
+          cooldownFill.style.width = '100%';
+          updateSendBtn(); // re-enable if still valid
+          return;
+        }
+        sendBtn.textContent = `Wait ${remaining}s…`;
+      }, 1000);
+
+      setTimeout(() => {
+        sendBtn.textContent = 'Get Verification Code';
+      }, COOLDOWN_SEC * 1000 + 100);
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    renderNumbers();
+    updateSendBtn();
+  </script>
+</body>
+</html>
