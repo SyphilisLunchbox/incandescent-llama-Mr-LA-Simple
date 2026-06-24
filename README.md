@@ -1,4 +1,4 @@
-# Mr LA Simple
+# Phantøm Phøne
 
 A privacy-first temporary US phone number service. Users can get SMS verification codes without creating an account.
 
